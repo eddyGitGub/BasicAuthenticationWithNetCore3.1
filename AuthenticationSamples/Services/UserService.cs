@@ -1,4 +1,7 @@
-﻿using AuthenticationSamples.Entities;
+﻿using AuthenticationSamples.Data;
+using AuthenticationSamples.Entities;
+using AuthenticationSamples.Extensions;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,17 +9,21 @@ using System.Threading.Tasks;
 
 namespace AuthenticationSamples.Services
 {
-    public class UserService : IUserService
+    public class UserService: IUserService
     {
-        // users hardcoded for simplicity, store in a db with hashed passwords in production applications
-        private List<User> _users = new List<User>
+        private DataContext _context;
+      
+        public UserService(
+            DataContext context
+            )
         {
-            new User { Id = 1, FirstName = "Test", LastName = "User", Username = "test", Password = "test" }
-        };
+            _context = context;
+           
+        }
 
         public async Task<User> Authenticate(string username, string password)
         {
-            var user = await Task.Run(() => _users.SingleOrDefault(x => x.Username == username && x.Password == password));
+            var user =await _context.Users.SingleOrDefaultAsync(x => x.Username == username && x.Password == password);
 
             // return null if user not found
             if (user == null)
@@ -28,7 +35,7 @@ namespace AuthenticationSamples.Services
 
         public async Task<IEnumerable<User>> GetAll()
         {
-            return await Task.Run(() => _users.WithoutPasswords());
+            return await _context.Users.ToListAsync();//.WithoutPasswords();
         }
     }
 }
